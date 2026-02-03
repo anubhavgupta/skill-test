@@ -1,0 +1,131 @@
+# VIBES Analysis
+
+Analyze VIBES (Customer Experience) time series data from CSV files to identify factors driving month-on-month changes in the VIBES score.
+
+## When to Use This Skill
+
+Use this skill when:
+- User uploads a CSV file with VIBES time series data
+- Goal is to analyze month-on-month changes in VIBES score
+- Need to identify which factors (fraud_segment, bu_site_nm, tenure) are driving changes
+
+## Data Structure
+
+CSV must contain the following columns:
+- `count`: Number of calls (aggregated sum)
+- `vibes`: Sum of VIBES scores (-1, 0, 1) per month
+- `fraud_segment`: Customer fraud segment category
+- `bu_site_nm`: Business unit/site name
+- `intrct_dt_year_mo`: Month identifier (format: YYYY-MM)
+
+VIBES score is calculated as `vibes / count`.
+
+## Analysis Workflow
+
+1. **Load and Validate Data**
+   - Read CSV file
+   - Verify required columns exist
+   - Check for data quality issues
+
+2. **Calculate VIBES Score**
+   - Compute `vibes_score = vibes / count` for each row
+
+3. **Month-on-Month Analysis**
+   - Sort data by `intrct_dt_year_mo`
+   - Calculate previous month's VIBES score
+   - Compute change: `change = current_score - previous_score`
+
+4. **Identify Drivers**
+   - Analyze how fraud_segment, bu_site_nm, and tenure contribute to changes
+   - Calculate percentage contribution of each factor to the overall change
+
+5. **Generate Insights**
+   - Summarize overall VIBES trend
+   - Highlight top drivers of change
+   - Provide actionable recommendations
+
+## Usage
+
+```bash
+# Run analysis
+python scripts/analyze_vibes.py <path_to_csv_file> [--segment <segment_name>]
+
+# Example
+python scripts/analyze_vibes.py data/vibes_2024.csv
+python scripts/analyze_vibes.py data/vibes_2024.csv --segment NONE
+```
+
+## Output
+
+The script generates:
+1. Text-based insights about month-on-month changes
+2. CSV file with calculated VIBES scores and changes (`*_analysis.csv`)
+
+## Files
+
+- `scripts/analyze_vibes.py` - Main analysis script
+- `references/data_schema.md` - Data structure documentation
+- `assets/sample_vibes_data.csv` - Sample data file for testing
+
+## Implementation Details
+
+### Data Schema
+
+The analysis expects a CSV file where each row represents a month aggregated by:
+- `fraud_segment`: Customer fraud segment category
+- `bu_site_nm`: Business unit/site name
+- `intrct_dt_year_mo`: Month identifier (YYYY-MM format)
+
+### VIBES Score Calculation
+
+```
+vibes_score = vibes / count
+```
+
+### Analysis Process
+
+1. Load and validate CSV data
+2. Calculate VIBES score for each row
+3. Sort data by month
+4. Compute month-over-month changes
+5. Identify top drivers by aggregating contributions:
+   - `fraud_segment`: Sum of VIBES changes per segment
+   - `bu_site_nm`: Sum of VIBES changes per site
+6. Generate insights based on:
+   - Overall VIBES trend (improvement/decline)
+   - Top contributing factors
+   - Average scores per segment/site
+
+### Example Output
+
+```
+VIBES Analysis
+==================================================
+[OK] Loaded 20 rows from sample.csv
+[OK] All required columns present
+
+Analysis Results:
+
+VIBES score improved by +0.0038 on average
+  - 20 months showed changes
+  - 20 months showed improvement
+  - 9 months showed decline
+
+Top fraud_segment driver: NONE
+  - Contribution: +0.1235
+  - Average VIBES score: 0.4092
+
+Top bu_site_nm driver: Site B
+  - Contribution: +0.6794
+  - Average VIBES score: 0.4381
+
+[OK] Results saved to: sample_analysis.csv
+```
+
+### Key Features
+
+- Handles multiple fraud segments and business units
+- Identifies positive and negative drivers of change
+- Provides average VIBES scores for context
+- Filters analysis by specific segment if needed
+- Outputs enriched CSV with all calculated fields
